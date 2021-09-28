@@ -1,6 +1,6 @@
 # ccdb_ssm
 
-The file "ccdb_freq.xlsx" contains raw reads of CcdB mutants in different bins for expression and binding.
+The file "ccdb_SSM_lib_reads.xlsx" contains raw reads of CcdB mutants in different bins for expression and binding.
 
 Binding_100_nM_replicate_1 and Binding_100_nM_replicate_2 sheets corresponds to the raw reads of GyrA14 (100 nM) binding to CcdB mutants expressed  on the yeast cell surface of two biological replicates.
 Binding_5_nM_replicate_1 and Binding_5_nM_replicate_2 sheets corresponds to the raw reads of GyrA14 (5 nM) binding to CcdB mutants expressed  on the yeast cell surface of two biological replicates.
