@@ -1,0 +1,191 @@
+require("knitr")
+knitr::opts_chunk$set(echo = T)
+knitr::opts_chunk$set(dev.args = list(png = list(type = "cairo")))
+
+#list of packages to install/load
+packages = c("data.table","tidyverse","fitdistrplus")
+#install any packages not already installed
+installed_packages <- packages %in% rownames(installed.packages())
+if(any(installed_packages == F)){
+  install.packages(packages[!installed_packages])
+}
+#load packages
+invisible(lapply(packages, library, character.only=T))
+
+############################################
+### CcdB Binding data 100 nM Replicate 1 ###
+############################################
+
+#read the data from the table
+ccdb_rep1_100nM <- data.table(read.csv(file="input_ccdb_rep1_100nM.csv",header=T,stringsAsFactors=F))
+colnames(ccdb_rep1_100nM)[1] <- gsub('^...','',colnames(ccdb_rep1_100nM)[1])
+
+#Calculating mean fluorescence
+calc.MLmean <- function(b1,b2,b3,b4,b5,b6,b7,b8,b9,b10,b11,min.b1,min.b2,min.b3,min.b4,min.b5,min.b6,min.b7,min.b8,min.b9,min.b10,min.b11,max.b11)
+{ #b1-11 gives observed cell counts in bins 1-11; remaining arguments give fluorescence boundaries of the respective bins
+ 
+data <- data.frame(left=c(rep(min.b1,round(b1)),rep(min.b2,round(b2)),rep(min.b3,round(b3)),rep(min.b4,round(b4)),rep(min.b5,round(b5)),rep(min.b6,round(b6)),rep(min.b7,round(b7)),rep(min.b8,round(b8)),rep(min.b9,round(b9)),rep(min.b10,round(b10)),rep(min.b11,round(b11))),
+                   right=c(rep(min.b2,round(b1)),rep(min.b3,round(b2)),rep(min.b4,round(b3)),rep(min.b5,round(b4)),rep(min.b6,round(b5)),rep(min.b7,round(b6)),rep(min.b8,round(b7)),rep(min.b9,round(b8)),rep(min.b10,round(b9)),rep(min.b11,round(b10)),rep(max.b11,round(b11)))) #define data input in format required for fitdistcens
+    fit <- fitdistcens(data,"norm")
+    return(list(as.numeric(summary(fit)$estimate["mean"])))
+ }
+ 
+#fit ML mean fluorescence for each barcode, and calculate total cell count as the sum across the 11 bins.  
+invisible(ccdb_rep1_100nM[,c("ML_meanF") := tryCatch(calc.MLmean(b1=bin1,b2=bin2,b3=bin3,b4=bin4,b5=bin5,b6=bin6,b7=bin7,
+									b8=bin8,b9=bin9,b10=bin10,b11=bin11,
+                                                                      min.b1=log(28),min.b2=log(389),min.b3=log(609),
+                                                                      min.b4=log(937),min.b5=log(1560),min.b6=log(2523),
+                                                                      min.b7=log(4017),min.b8=log(5769),min.b9=log(8071),
+                                                                      min.b10=log(10725),min.b11=log(14258),max.b11=log(22871)),
+                                                          error=function(e){return(list(as.numeric(NA)))}),by=codon_substitutions])
+ccdb_rep1_100nM[,total_count := sum(bin1,bin2,bin3,bin4,bin5,bin6,bin7,bin8,bin9,bin10,bin11),by=codon_substitutions]
+write.csv(ccdb_rep1_100nM, "ccdb_rep1_100nM_meanF.csv")
+
+############################################
+### CcdB Binding data 100 nM Replicate 2 ###
+############################################
+
+#read the data from the table
+ccdb_rep2_100nM  <- data.table(read.csv(file="input_ccdb_rep2_100nM.csv",header=T,stringsAsFactors=F))
+colnames(ccdb_day4_100nM)[1] <- gsub('^...','',colnames(ccdb_day4_100nM)[1])
+
+#Calculating mean fluorescence
+calc.MLmean <- function(b1,b2,b3,b4,b5,b6,b7,b8,b9,b10,b11,min.b1,min.b2,min.b3,min.b4,min.b5,min.b6,min.b7,min.b8,min.b9,min.b10,min.b11,max.b11)
+{ #b1-11 gives observed cell counts in bins 1-11; remaining arguments give fluorescence boundaries of the respective bins
+ 
+data <- data.frame(left=c(rep(min.b1,round(b1)),rep(min.b2,round(b2)),rep(min.b3,round(b3)),rep(min.b4,round(b4)),rep(min.b5,round(b5)),rep(min.b6,round(b6)),rep(min.b7,round(b7)),rep(min.b8,round(b8)),rep(min.b9,round(b9)),rep(min.b10,round(b10)),rep(min.b11,round(b11))),
+                   right=c(rep(min.b2,round(b1)),rep(min.b3,round(b2)),rep(min.b4,round(b3)),rep(min.b5,round(b4)),rep(min.b6,round(b5)),rep(min.b7,round(b6)),rep(min.b8,round(b7)),rep(min.b9,round(b8)),rep(min.b10,round(b9)),rep(min.b11,round(b10)),rep(max.b11,round(b11)))) #define data input in format required for fitdistcens
+    fit <- fitdistcens(data,"norm")
+    return(list(as.numeric(summary(fit)$estimate["mean"])))
+ }
+ 
+#fit ML mean fluorescence for each barcode, and calculate total cell count as the sum across the 11 bins.  
+invisible(ccdb_rep2_100nM[,c("ML_meanF") := tryCatch(calc.MLmean(b1=bin1,b2=bin2,b3=bin3,b4=bin4,b5=bin5,b6=bin6,b7=bin7,
+									b8=bin8,b9=bin9,b10=bin10,b11=bin11,
+                                                                      min.b1=log(28),min.b2=log(394),min.b3=log(975),
+                                                                      min.b4=log(2129),min.b5=log(4197),min.b6=log(6851),
+                                                                      min.b7=log(10914),min.b8=log(15808),min.b9=log(22119),
+                                                                      min.b10=log(29694),min.b11=log(39410),max.b11=log(71347)),
+                                                          error=function(e){return(list(as.numeric(NA)))}),by=codon_substitutions])
+ccdb_rep2_100nM[,total_count := sum(bin1,bin2,bin3,bin4,bin5,bin6,bin7,bin8,bin9,bin10,bin11),by=codon_substitutions]
+write.csv(ccdb_rep2_100nM, "ccdb_rep2_100nM_meanF.csv")
+
+
+##########################################
+### CcdB Binding data 5 nM Replicate 1 ###
+##########################################
+
+#read the data from the table
+ccdb_rep1_5nM <- data.table(read.csv(file="input_ccdb_rep1_5nM.csv",header=T,stringsAsFactors=F))
+colnames(ccdb_rep1_5nM)[1] <- gsub('^...','',colnames(ccdb_rep1_5nM)[1])
+
+#Calculating mean fluorescence
+calc.MLmean <- function(b1,b2,b3,b4,b5,b6,b7,b8,b9,b10,min.b1,min.b2,min.b3,min.b4,min.b5,min.b6,min.b7,min.b8,min.b9,min.b10,max.b10)
+{ #b1-11 gives observed cell counts in bins 1-10; remaining arguments give fluorescence boundaries of the respective bins
+ 
+data <- data.frame(left=c(rep(min.b1,round(b1)),rep(min.b2,round(b2)),rep(min.b3,round(b3)),rep(min.b4,round(b4)),rep(min.b5,round(b5)),rep(min.b6,round(b6)),rep(min.b7,round(b7)),rep(min.b8,round(b8)),rep(min.b9,round(b9)),rep(min.b10,round(b10))),
+                   right=c(rep(min.b2,round(b1)),rep(min.b3,round(b2)),rep(min.b4,round(b3)),rep(min.b5,round(b4)),rep(min.b6,round(b5)),rep(min.b7,round(b6)),rep(min.b8,round(b7)),rep(min.b9,round(b8)),rep(min.b10,round(b9)),rep(max.b10,round(b10)))) #define data input in format required for fitdistcens
+    fit <- fitdistcens(data,"norm")
+    return(list(as.numeric(summary(fit)$estimate["mean"])))
+ }
+ 
+#fit ML mean fluorescence for each barcode, and calculate total cell count as the sum across the 11 bins.  
+invisible(ccdb_rep1_5nM[,c("ML_meanF") := tryCatch(calc.MLmean(b1=bin1,b2=bin2,b3=bin3,b4=bin4,b5=bin5,b6=bin6,b7=bin7,
+									b8=bin8,b9=bin9,b10=bin10,
+                                                                      min.b1=log(28),min.b2=log(389),min.b3=log(612),
+                                                                      min.b4=log(937),min.b5=log(1557),min.b6=log(2523),
+                                                                      min.b7=log(4017),min.b8=log(5769),min.b9=log(8071),
+                                                                      min.b10=log(10725),max.b10=log(18146)),
+                                                          error=function(e){return(list(as.numeric(NA)))}),by=codon_substitutions])
+ccdb_rep1_5nM[,total_count := sum(bin1,bin2,bin3,bin4,bin5,bin6,bin7,bin8,bin9,bin10),by=codon_substitutions]
+write.csv(ccdb_rep1_5nM, "ccdb_rep1_5nM_meanF.csv")
+
+
+##########################################
+### CcdB Binding data 5 nM Replicate 2 ###
+##########################################
+
+#read the data from the table
+ccdb_rep2_5nM <- data.table(read.csv(file="input_ccdb_rep2_5nM.csv",header=T,stringsAsFactors=F))
+colnames(ccdb_rep2_5nM)[1] <- gsub('^...','',colnames(ccdb_rep2_5nM)[1])
+
+#Calculating mean fluorescence
+calc.MLmean <- function(b1,b2,b3,b4,b5,b6,b7,b8,b9,b10,min.b1,min.b2,min.b3,min.b4,min.b5,min.b6,min.b7,min.b8,min.b9,min.b10,max.b10)
+{ #b1-11 gives observed cell counts in bins 1-10; remaining arguments give fluorescence boundaries of the respective bins
+ 
+data <- data.frame(left=c(rep(min.b1,round(b1)),rep(min.b2,round(b2)),rep(min.b3,round(b3)),rep(min.b4,round(b4)),rep(min.b5,round(b5)),rep(min.b6,round(b6)),rep(min.b7,round(b7)),rep(min.b8,round(b8)),rep(min.b9,round(b9)),rep(min.b10,round(b10))),
+                   right=c(rep(min.b2,round(b1)),rep(min.b3,round(b2)),rep(min.b4,round(b3)),rep(min.b5,round(b4)),rep(min.b6,round(b5)),rep(min.b7,round(b6)),rep(min.b8,round(b7)),rep(min.b9,round(b8)),rep(min.b10,round(b9)),rep(max.b10,round(b10)))) #define data input in format required for fitdistcens
+    fit <- fitdistcens(data,"norm")
+    return(list(as.numeric(summary(fit)$estimate["mean"])))
+ }
+ 
+#fit ML mean fluorescence for each barcode, and calculate total cell count as the sum across the 11 bins.  
+invisible(ccdb_rep2_5nM[,c("ML_meanF") := tryCatch(calc.MLmean(b1=bin1,b2=bin2,b3=bin3,b4=bin4,b5=bin5,b6=bin6,b7=bin7,
+									b8=bin8,b9=bin9,b10=bin10,
+                                                                      min.b1=log(28),min.b2=log(389),min.b3=log(732),
+                                                                      min.b4=log(1215),min.b5=log(2198),min.b6=log(3355),
+                                                                      min.b7=log(4855),min.b8=log(6973),min.b9=log(9763),
+                                                                      min.b10=log(14629),max.b10=log(38021)),
+                                                          error=function(e){return(list(as.numeric(NA)))}),by=codon_substitutions])
+ccdb_rep2_5nM[,total_count := sum(bin1,bin2,bin3,bin4,bin5,bin6,bin7,bin8,bin9,bin10),by=codon_substitutions]
+write.csv(ccdb_rep2_5nM, "ccdb_rep2_5nM_meanF.csv")
+
+
+############################################
+###   CcdB Expression data Replicate 1   ###
+############################################
+
+#read the data from the table
+ccdb_rep1_exp <- data.table(read.csv(file="input_ccdb_rep1_exp.csv",header=T,stringsAsFactors=F))
+colnames(ccdb_rep1_exp)[1] <- gsub('^...','',colnames(ccdb_rep1_exp)[1])
+
+#Calculating mean fluorescence
+calc.MLmean <- function(b1,b2,b3,b4,b5,b6,b7,b8,b9,b10,b11,min.b1,min.b2,min.b3,min.b4,min.b5,min.b6,min.b7,min.b8,min.b9,min.b10,min.b11,max.b11)
+{ #b1-11 gives observed cell counts in bins 1-11; remaining arguments give fluorescence boundaries of the respective bins
+ 
+data <- data.frame(left=c(rep(min.b1,round(b1)),rep(min.b2,round(b2)),rep(min.b3,round(b3)),rep(min.b4,round(b4)),rep(min.b5,round(b5)),rep(min.b6,round(b6)),rep(min.b7,round(b7)),rep(min.b8,round(b8)),rep(min.b9,round(b9)),rep(min.b10,round(b10)),rep(min.b11,round(b11))),
+                   right=c(rep(min.b2,round(b1)),rep(min.b3,round(b2)),rep(min.b4,round(b3)),rep(min.b5,round(b4)),rep(min.b6,round(b5)),rep(min.b7,round(b6)),rep(min.b8,round(b7)),rep(min.b9,round(b8)),rep(min.b10,round(b9)),rep(min.b11,round(b10)),rep(max.b11,round(b11)))) #define data input in format required for fitdistcens
+    fit <- fitdistcens(data,"norm")
+    return(list(as.numeric(summary(fit)$estimate["mean"])))
+ }
+ 
+#fit ML mean fluorescence for each barcode, and calculate total cell count as the sum across the 11 bins.  
+invisible(ccdb_rep1_exp[,c("ML_meanF") := tryCatch(calc.MLmean(b1=bin1,b2=bin2,b3=bin3,b4=bin4,b5=bin5,b6=bin6,b7=bin7,
+							       b8=bin8,b9=bin9,b10=bin10,b11=bin11,
+                                                               min.b1=log(55),min.b2=log(271),min.b3=log(848),
+                                                               min.b4=log(1642),min.b5=log(2218),min.b6=log(2998),
+                                                               min.b7=log(3981),min.b8=log(5242),min.b9=log(6962),
+                                                               min.b10=log(8844),min.b11=log(11996),max.b11=log(29358)),
+                                                               error=function(e){return(list(as.numeric(NA)))}),by=codon_substitutions])
+ccdb_rep1_exp[,total_count := sum(bin1,bin2,bin3,bin4,bin5,bin6,bin7,bin8,bin9,bin10,bin11),by=codon_substitutions]
+write.csv(ccdb_rep1_exp, "ccdb_rep1_exp.csv")
+
+
+############################################
+###   CcdB Expression data Replicate 2   ###
+############################################
+
+#read the data from the table
+ccdb_rep2_exp <- data.table(read.csv(file="input_ccdb_rep2_exp.csv",header=T,stringsAsFactors=F))
+colnames(ccdb_rep2_exp)[1] <- gsub('^...','',colnames(ccdb_rep2_exp)[1])
+
+#Calculating mean fluorescence
+calc.MLmean <- function(b1,b2,b3,b4,b5,b6,b7,b8,b9,b10,b11,min.b1,min.b2,min.b3,min.b4,min.b5,min.b6,min.b7,min.b8,min.b9,min.b10,min.b11,max.b11)
+{ #b1-11 gives observed cell counts in bins 1-11; remaining arguments give fluorescence boundaries of the respective bins
+ 
+data <- data.frame(left=c(rep(min.b1,round(b1)),rep(min.b2,round(b2)),rep(min.b3,round(b3)),rep(min.b4,round(b4)),rep(min.b5,round(b5)),rep(min.b6,round(b6)),rep(min.b7,round(b7)),rep(min.b8,round(b8)),rep(min.b9,round(b9)),rep(min.b10,round(b10)),rep(min.b11,round(b11))),
+                   right=c(rep(min.b2,round(b1)),rep(min.b3,round(b2)),rep(min.b4,round(b3)),rep(min.b5,round(b4)),rep(min.b6,round(b5)),rep(min.b7,round(b6)),rep(min.b8,round(b7)),rep(min.b9,round(b8)),rep(min.b10,round(b9)),rep(min.b11,round(b10)),rep(max.b11,round(b11)))) #define data input in format required for fitdistcens
+    fit <- fitdistcens(data,"norm")
+    return(list(as.numeric(summary(fit)$estimate["mean"])))
+ }
+ 
+#fit ML mean fluorescence for each barcode, and calculate total cell count as the sum across the 11 bins.  
+invisible(ccdb_rep2_exp[,c("ML_meanF") := tryCatch(calc.MLmean(b1=bin1,b2=bin2,b3=bin3,b4=bin4,b5=bin5,b6=bin6,b7=bin7,
+							       b8=bin8,b9=bin9,b10=bin10,b11=bin11,
+                                                               min.b1=log(55),min.b2=log(271),min.b3=log(848),
+                                                               min.b4=log(1643),min.b5=log(2218),min.b6=log(2998),
+                                                               min.b7=log(3980),min.b8=log(5244),min.b9=log(6959),
+                                                               min.b10=log(8846),min.b11=log(11985),max.b11=log(22984)),
+                                                               error=function(e){return(list(as.numeric(NA)))}),by=codon_substitutions])
+ccdb_rep2_exp[,total_count := sum(bin1,bin2,bin3,bin4,bin5,bin6,bin7,bin8,bin9,bin10,bin11),by=codon_substitutions]
+write.csv(ccdb_rep2_exp, "ccdb_rep2_exp.csv")
